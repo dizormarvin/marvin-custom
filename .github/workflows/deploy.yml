@@ -6,7 +6,7 @@ on:
     types:
       - completed
     branches:
-      - main
+      - main # Updated to trigger when CI passes on main
 
 jobs:
   deploy:
@@ -21,24 +21,22 @@ jobs:
           username: frappe
           key: ${{ secrets.GCP_SSH_KEY }}
           script: |
-            # 1. Properly append the local bin directory to the execution path
             export PATH=$PATH:/home/frappe/.local/bin:/usr/local/bin
             
             echo "Navigating to app directory..."
             cd /home/frappe/frappe-bench/apps/marvin_custom
             
-            echo "Fetching all branches and tags from origin..."
-            git fetch --all --tags
+            echo "Fetching all branches from origin..."
+            git fetch --all
             
-            echo "Checking out and pulling the latest code..."
-            # This handles pulling the branch safely as the native frappe user
-            git checkout version-16 || git checkout -b version-16 origin/version-16
-            git reset --hard origin/version-16
+            echo "Checking out and pulling the latest code from main..."
+            # Updated to track and pull the main branch safely
+            git checkout main || git checkout -b main origin/main
+            git reset --hard origin/main
             
             echo "Moving to bench root to sync and restart..."
             cd /home/frappe/frappe-bench
             
-            # 2. Running bench directly without sudo fixes the pathing mismatch
             bench clear-cache
             bench build --app marvin_custom
             bench restart
