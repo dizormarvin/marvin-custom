@@ -3,6 +3,6 @@
 
 frappe.ui.form.on("First Doctype", {
 	refresh(frm) {
-        console.log('test')
+        console.log('tesst')
 	},
 });
