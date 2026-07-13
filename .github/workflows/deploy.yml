@@ -46,7 +46,7 @@ jobs:
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.GCP_HOST }}
-          username: github-actions-deploy # <--- Changed from 'frappe' to match your GCP public key
+          username: frappe
           key: ${{ secrets.GCP_SSH_KEY }}
           script: |
             export PATH=$PATH:/home/frappe/.local/bin:/usr/local/bin
