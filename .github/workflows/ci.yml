@@ -3,11 +3,11 @@ name: CI
 on:
   push:
     branches:
-      - version-16
+      - main
   pull_request:
 
 concurrency:
-  group: version-16-marvin_custom-${{ github.event.number }}
+  group: main-marvin_custom-${{ github.event.number }}
   cancel-in-progress: true
 
 jobs:
