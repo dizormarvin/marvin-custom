@@ -2,16 +2,15 @@ name: Deploy to GCP Server
 
 on:
   workflow_run:
-    workflows: ["CI"] # Triggers when the workflow named "CI" finishes
+    workflows: ["CI"] 
     types:
       - completed
     branches:
-      - main
+      - version-16
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    # This guard ensures deployment ONLY happens if the CI workflow passed successfully
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     
     steps:
@@ -22,19 +21,25 @@ jobs:
           username: frappe
           key: ${{ secrets.GCP_SSH_KEY }}
           script: |
+            # 1. Force the explicit pathing so sudo -u frappe knows where bench lives
             export PATH=$PATH:/home/frappe/.local/bin:/usr/local/bin
             
             echo "Navigating to app directory..."
             cd /home/frappe/frappe-bench/apps/marvin_custom
             
-            echo "Fetching and applying latest changes from version-16..."
-            sudo -u frappe git fetch origin version-16
-            sudo -u frappe git reset --hard origin/version-16
+            echo "Fetching from upstream origin..."
+            sudo -u frappe git fetch --all
+            
+            echo "Resetting branch safely..."
+            # Using HEAD ensures it pulls down whatever tracked branch matches your current setup without ref errors
+            sudo -u frappe git reset --hard origin/$(sudo -u frappe git rev-parse --abbrev-ref HEAD)
             
             echo "Moving to bench root to sync and restart..."
             cd /home/frappe/frappe-bench
-            sudo -u frappe bench clear-cache
-            sudo -u frappe bench build --app marvin_custom
-            sudo -u frappe bench restart
+            
+            # Explicitly calling the full local bin path prevents the "bench: command not found" error under sudo
+            sudo -u frappe /home/frappe/.local/bin/bench clear-cache
+            sudo -u frappe /home/frappe/.local/bin/bench build --app marvin_custom
+            sudo -u frappe /home/frappe/.local/bin/bench restart
             
             echo "Deployment completed successfully!"
