@@ -1,13 +1,19 @@
 name: Deploy to GCP Server
 
 on:
-  push:
+  workflow_run:
+    workflows: ["CI"] # Triggers when the workflow named "CI" finishes
+    types:
+      - completed
     branches:
       - main
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    # This guard ensures deployment ONLY happens if the CI workflow passed successfully
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    
     steps:
       - name: Deploy via SSH
         uses: appleboy/ssh-action@master
@@ -18,12 +24,17 @@ jobs:
           script: |
             export PATH=$PATH:/home/frappe/.local/bin:/usr/local/bin
             
-            # Use sudo -u frappe to run commands as the frappe user
+            echo "Navigating to app directory..."
             cd /home/frappe/frappe-bench/apps/marvin_custom
+            
+            echo "Fetching and applying latest changes from version-16..."
             sudo -u frappe git fetch origin version-16
             sudo -u frappe git reset --hard origin/version-16
             
+            echo "Moving to bench root to sync and restart..."
             cd /home/frappe/frappe-bench
             sudo -u frappe bench clear-cache
             sudo -u frappe bench build --app marvin_custom
             sudo -u frappe bench restart
+            
+            echo "Deployment completed successfully!"
