@@ -146,6 +146,12 @@ app_license = "mit"
 # 	}
 # }
 
+doc_events = {
+    "Sales Invoice": {
+        "validate": "marvin_custom.api.test"
+    }
+}
+
 # Scheduled Tasks
 # ---------------
 
